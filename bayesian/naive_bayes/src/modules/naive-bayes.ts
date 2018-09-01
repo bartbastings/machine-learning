@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 
 import { CONSTANT } from '../constants/constant';
+import { IFrequencyTable, INaiveBayesClass, IPredict } from '../interfaces/naive-bayes-interface';
 import { logger } from '../utils/logger';
-import { IPredict, INaiveBayesClass, IFrequencyTable } from '../interfaces/naive-bayes-interface';
 
 /**
  * @constant STATE_KEYS
@@ -37,17 +37,20 @@ export default class NaiveBayes {
     public totalDocuments: number = 0;
 
     /**
-     * @property {array} docCount for or each category, how often were documents mapped to it
+     * @property {array} docCount for or each category,
+     * how often were documents mapped to it
      */
     public docCount = {};
 
     /**
-     * @property {array} wordCount for each category, how many words total were mapped to it
+     * @property {array} wordCount for each category,
+     * how many words total were mapped to it
      */
     public wordCount = {};
 
     /**
-     * @property {number} wordFrequencyCount for each category, how frequent was a given word mapped to it
+     * @property {number} wordFrequencyCount for each category,
+     * how frequent was a given word mapped to it
      */
     public wordFrequencyCount = {};
 
@@ -55,6 +58,145 @@ export default class NaiveBayes {
      * @property {object} categories hashmap of our category names
      */
     public categories = {};
+
+    /**
+     * @method learn
+     * @description train our naive-bayes classifier,
+     * by telling it what `category` the `text` corresponds to.
+     * @param {String} text text to train corresponding to the category
+     * @param {String} category category to train corresponding to the text
+     */
+    public learn(text: string, category: string): INaiveBayesClass {
+        // initialize category data structures if we've never seen this category
+        this._initCategory(category);
+
+        // update our count of how many documents mapped to this category
+        this.docCount[category]++;
+
+        // update the total number of documents we have learned from
+        this.totalDocuments++;
+
+        // normalize the text into a word array
+        const tokens = this._tokenizer(text);
+
+        // get a frequency count for each token in the text
+        const frequencyTable = this._frequencyTable(tokens);
+
+        // update our vocabulary and our word frequency
+        // count for this category console.log('_iterateKeys');
+        this._iterateKeys(frequencyTable, (token) => {
+            // add this word to our vocabulary if not already existing
+            this._initVocabulary(token);
+
+            const frequencyInText = frequencyTable[token];
+
+            // update the frequency information for this word in this category
+            this._initWordFrequencyCount(frequencyInText, token, category);
+
+            // update the count of all words we have seen mapped to this category
+            this.wordCount[category] += frequencyInText;
+        });
+
+        return this;
+    }
+
+    /**
+     * @method predict
+     * @description Predict what category `text` belongs to.
+     * @param {string} text text to predict corresponding to a category
+     * @return {string} chosenCategory
+     */
+    public predict(text: string): IPredict {
+        let maxProbability = -Infinity;
+
+        // the return object
+        const returnPredict = {
+            predicted: '',
+            probabilities: {},
+        };
+
+        // normalize the text into a word array
+        const tokens = this._tokenizer(text);
+
+        // get a frequency count for each token in the text
+        const frequencyTable = this._frequencyTable(tokens);
+
+        // iterate thru our categories to find the one with max probability for this text
+        this._iterateKeys(this.categories, (category) => {
+            let maxCategoryProbability = -Infinity;
+            // start by calculating the overall probability of this category
+            const categoryProbability = this.docCount[category] / this.totalDocuments;
+
+            // take the log to avoid underflow
+            let logProbability = Math.log(categoryProbability);
+
+            // now determine P(A|B) for each word `b` in the text
+            this._iterateKeys(frequencyTable, (token) => {
+                const frequencyInText = frequencyTable[token];
+                const tokenProbability = this._tokenProbability(token, category);
+
+                // determine the log of the P(A|B) for this word
+                logProbability += frequencyInText * Math.log(tokenProbability);
+            });
+
+            if (logProbability > maxCategoryProbability) {
+                maxCategoryProbability = logProbability;
+                returnPredict.probabilities[category] = maxCategoryProbability;
+            }
+
+            if (logProbability > maxProbability) {
+                maxProbability = logProbability;
+                returnPredict.predicted = category;
+            }
+        });
+
+        return returnPredict;
+    }
+
+    /**
+     * @method importData
+     * @description Initializes a NaiveBayes instance from a JSON state representation
+     * @param {string} jsonStr
+     * @returns {INaiveBayesClass}
+     */
+    public importData(jsonStr: string): INaiveBayesClass {
+        let parsed = {};
+
+        try {
+            parsed = JSON.parse(jsonStr);
+        } catch (error) {
+            logger.error(`importData :: is not a valid JSON string ${jsonStr}`);
+        }
+
+        _.forEach(STATE_KEYS, (key) => {
+            if (parsed[key]) {
+                this[key] = parsed[key];
+            } else {
+                logger.error(`importData :: is missing an expected property ${key}`);
+            }
+        });
+
+        return this;
+    }
+
+    /**
+     * @method exportData
+     * @description description
+     * @return {string} json
+     */
+    public exportData(): any {
+        const state = {};
+
+        if (this.vocabularySize > 0) {
+            _.forEach(STATE_KEYS, (key) => {
+                state[key] = this[key];
+            });
+        } else {
+            logger.error('exportData :: no data available');
+        }
+
+        return state;
+    }
 
     /**
      * @method _initializeCategory
@@ -160,142 +302,5 @@ export default class NaiveBayes {
 
         // use laplace Add-1 Smoothing equation
         return (wordFrequencyCount + 1) / (wordCount + this.vocabularySize);
-    }
-
-    /**
-     * @method learn
-     * @description train our naive-bayes classifier by telling it what `category` the `text` corresponds to.
-     * @param {String} text text to train corresponding to the category
-     * @param {String} category category to train corresponding to the text
-     */
-    public learn(text: string, category: string): INaiveBayesClass {
-        // initialize category data structures if we've never seen this category
-        this._initCategory(category);
-
-        // update our count of how many documents mapped to this category
-        this.docCount[category]++;
-
-        // update the total number of documents we have learned from
-        this.totalDocuments++;
-
-        // normalize the text into a word array
-        const tokens = this._tokenizer(text);
-
-        // get a frequency count for each token in the text
-        const frequencyTable = this._frequencyTable(tokens);
-
-        // update our vocabulary and our word frequency count for this category console.log('_iterateKeys');
-        this._iterateKeys(frequencyTable, (token) => {
-            // add this word to our vocabulary if not already existing
-            this._initVocabulary(token);
-
-            const frequencyInText = frequencyTable[token];
-
-            // update the frequency information for this word in this category
-            this._initWordFrequencyCount(frequencyInText, token, category);
-
-            // update the count of all words we have seen mapped to this category
-            this.wordCount[category] += frequencyInText;
-        });
-
-        return this;
-    }
-
-    /**
-     * @method predict
-     * @description Predict what category `text` belongs to.
-     * @param {string} text text to predict corresponding to a category
-     * @return {string} chosenCategory
-     */
-    public predict(text: string): IPredict {
-        let maxProbability = -Infinity;
-
-        // the return object
-        const returnPredict = {
-            probabilities: {},
-            predicted: ''
-        };
-
-        // normalize the text into a word array
-        const tokens = this._tokenizer(text);
-
-        // get a frequency count for each token in the text
-        const frequencyTable = this._frequencyTable(tokens);
-
-        // iterate thru our categories to find the one with max probability for this text
-        this._iterateKeys(this.categories, (category) => {
-            let maxCategoryProbability = -Infinity;
-            // start by calculating the overall probability of this category
-            const categoryProbability = this.docCount[category] / this.totalDocuments;
-
-            // take the log to avoid underflow
-            let logProbability = Math.log(categoryProbability);
-
-            // now determine P(A|B) for each word `b` in the text
-            this._iterateKeys(frequencyTable, (token) => {
-                const frequencyInText = frequencyTable[token];
-                const tokenProbability = this._tokenProbability(token, category);
-
-                // determine the log of the P(A|B) for this word
-                logProbability += frequencyInText * Math.log(tokenProbability);
-            });
-
-            if (logProbability > maxCategoryProbability) {
-                maxCategoryProbability = logProbability;
-                returnPredict.probabilities[category] = maxCategoryProbability;
-            }
-
-            if (logProbability > maxProbability) {
-                maxProbability = logProbability;
-                returnPredict.predicted = category;
-            }
-        });
-
-        return returnPredict;
-    }
-
-    /**
-     * @method importData
-     * @description Initializes a NaiveBayes instance from a JSON state representation
-     * @param {string} jsonStr
-     * @returns {INaiveBayesClass}
-     */
-    public importData(jsonStr: string): INaiveBayesClass {
-        let parsed = {};
-
-        try {
-            parsed = JSON.parse(jsonStr);
-        } catch (error) {
-            logger.error(`importData :: is not a valid JSON string ${jsonStr}`);
-        }
-
-        _.forEach(STATE_KEYS, (key) => {
-            if (parsed[key]) {
-                this[key] = parsed[key];
-            } else {
-                logger.error(`importData :: is missing an expected property ${key}`);
-            }
-        });
-
-        return this;
-    }
-
-    /**
-     * @method exportData
-     * @description description
-     * @return {string} json
-     */
-    public exportData(): any {
-        const state = {};
-
-        if (this.vocabularySize > 0) {
-            _.forEach(STATE_KEYS, (key) => {
-                state[key] = this[key];
-            });
-        } else {
-            logger.error('exportData :: no data available');
-        }
-
-        return state;
     }
 }

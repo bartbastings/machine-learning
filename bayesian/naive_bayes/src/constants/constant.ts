@@ -10,6 +10,6 @@ export const CONSTANT = {
         'vocabulary',
         'vocabularySize',
         'wordCount',
-        'wordFrequencyCount'
-    ]
+        'wordFrequencyCount',
+    ],
 };

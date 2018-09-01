@@ -7,12 +7,12 @@ export const config = {
     /**
      * @property {string} port
      */
-    logFile: process.env.LOG_FILE || 'debug.log',
+    logFile: process.env.LOG_FILE || './log/debug.log',
 
     /**
      * @property {string} errorLogFile
      */
-    errorLogFile: process.env.ERROR_LOG_FILE || 'error.log',
+    errorLogFile: process.env.ERROR_LOG_FILE || './log/error.log',
 
     /**
      * @property {string} errorLogFile
