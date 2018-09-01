@@ -2,7 +2,7 @@
 
 A repository for to test how a Machine learning algorithms works.
 
-[Machine Learning algorithms](machinelearningalgorithms.png)
+![Machine Learning algorithms](machinelearningalgorithms.png)
 
 ## Bayesian Algorithms
 
