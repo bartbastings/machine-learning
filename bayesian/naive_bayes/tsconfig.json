@@ -12,7 +12,9 @@
         "noImplicitAny": false,
         "noEmitOnError": true,
         "watch": false,
-        "outDir": "dist"
+        "outDir": "dist",
+        "allowUnusedLabels": false,
+        "noImplicitReturns": true
     },
     "include": [
         "src/**/*"

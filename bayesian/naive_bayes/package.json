@@ -28,7 +28,8 @@
     "source-map": "^0.7.3",
     "ts-loader": "^4.3.1",
     "tslint": "^5.10.0",
-    "webpack": "^4.10.2"
+    "webpack": "^4.10.2",
+    "webpack-cli": "^3.0.1"
   },
   "dependencies": {
     "dotenv": "^6.0.0",
@@ -37,6 +38,6 @@
     "winston": "^3.0.0"
   },
   "engines": {
-      "node": ">=10.6.0"
+    "node": ">=10.6.0"
   }
 }

@@ -14,4 +14,9 @@ export const config = {
      */
     errorLogFile: process.env.ERROR_LOG_FILE || 'error.log',
 
+    /**
+     * @property {string} errorLogFile
+     */
+    nodeEnv: process.env.NODE_ENV || 'development',
+
 };
