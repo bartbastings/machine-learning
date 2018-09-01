@@ -1,0 +1,33 @@
+{
+  "name": "naive-bayes",
+  "version": "1.0.0",
+  "description": "A Naive-Bayes classifier for TypeScript",
+  "scripts": {
+    "start": "npm run server",
+    "build": "webpack --config webpack.config.js --config-name production",
+    "server": "npm run build && node ./dist/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bartbastings/machine_learning-bayesian-naive_bayes.git"
+  },
+  "author": "Bart Bastings",
+  "devDependencies": {
+    "@types/dotenv": "^4.0.3",
+    "@types/lodash": "^4.14.115",
+    "@types/node": "^10.3.0",
+    "@types/winston": "^2.3.9",
+    "clean-webpack-plugin": "^0.1.19",
+    "fork-ts-checker-webpack-plugin": "^0.4.2",
+    "source-map": "^0.7.3",
+    "ts-loader": "^4.3.1",
+    "tslint": "^5.10.0",
+    "webpack": "^4.10.2"
+  },
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "lodash": "^4.17.10",
+    "typescript": "^2.9.1",
+    "winston": "^3.0.0"
+  }
+}

@@ -1,0 +1,33 @@
+{
+    "compilerOptions": {
+        "target": "es2015",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "removeComments": false,
+        "strictNullChecks": true,
+        "skipLibCheck": true,
+        "noImplicitAny": false,
+        "noEmitOnError": true,
+        "watch": false,
+        "outDir": "dist"
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ],
+    "files": [
+        "typings/index.d.ts"
+    ],
+    "types": [
+        "body-parser",
+        "dotenv",
+        "express",
+        "node"
+    ],
+    "compileOnSave": false
+}
