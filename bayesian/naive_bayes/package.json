@@ -8,14 +8,15 @@
     "typescript"
   ],
   "scripts": {
-    "start": "npm run server",
+    "start": "npm run build && npm run server",
     "test": "echo \\\"Error: no test specified\\\" && exit 1",
     "build": "webpack --config webpack.config.js --config-name production",
-    "server": "npm run build && node ./dist/app.js"
+    "dev": "webpack --config webpack.config.js --config-name development",
+    "server": "node ./dist/app.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bartbastings/machine_learning-bayesian-naive_bayes.git"
+    "url": "git+https://github.com/bartbastings/machine-learning.git"
   },
   "author": "Bart Bastings",
   "devDependencies": {

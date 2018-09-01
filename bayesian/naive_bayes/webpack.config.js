@@ -11,7 +11,7 @@ module.exports = [
         name: 'production',
         entry: path.resolve(__dirname, 'src/index.ts'),
         target: 'node',
-        mode: process.env.NODE_ENV,
+        mode: 'production',
         output: {
             filename: 'app.js',
             path: path.resolve(__dirname, 'dist'),
@@ -32,6 +32,39 @@ module.exports = [
                     exclude: /node_modules/
                 }
             ]
+        },
+        plugins: [
+            new CleanWebpackPlugin(['dist']),
+            new ForkTsCheckerWebpackPlugin({
+                tsconfig: path.resolve(__dirname, 'tsconfig.json'),
+                tslint: path.resolve(__dirname, 'tslint.json')
+            })
+        ]
+    },
+    {
+        name: 'development',
+        devtool: 'cheap-module-eval-source-map',
+        entry: path.resolve(__dirname, 'src/index.ts'),
+        target: 'node',
+        mode: 'development',
+        output: {
+            filename: 'app.js',
+            path: path.resolve(__dirname, 'dist'),
+            libraryTarget: 'commonjs'
+        },
+        resolve: {
+            extensions: ['.ts', '.js'],
+            modules: ['node_modules']
+        },
+        module: {
+            rules: [{
+                test: /\.ts$/,
+                loader: 'ts-loader',
+                options: {
+                    transpileOnly: true
+                },
+                exclude: /node_modules/
+            }]
         },
         plugins: [
             new CleanWebpackPlugin(['dist']),
