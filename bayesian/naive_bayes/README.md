@@ -1,19 +1,18 @@
 # Naive Bayes Algorithm
 
-A Naive Bayes classifier for TypeScript
+A Naive Bayes classifier for Node
 
 ## npm modules
 
 * [dotenv](https://www.npmjs.com/package/dotenv)
 * [lodash](https://www.npmjs.com/package/lodash)
-* [typescript](https://www.npmjs.com/package/typescript)
 * [winston](https://www.npmjs.com/package/winston)
 
 ## Install npm
 
 Use these steps to install the node modules.
 
-1. First [download and install](https://nodejs.org/en/download/) node version 8.11.3
+1. First [download and install](https://nodejs.org/en/download/) node version 10.6.0 or higher
 2. Open the GitBash terminal on the directory of the project.
 3. And run the command ```npm install``` or ```npm i```
 
@@ -21,10 +20,9 @@ Use these steps to install the node modules.
 
 These are the commands for the node modules script.
 
-* Command ```npm run build``` run the distribution build, the code is uglifyed.
-* Command ```npm run server``` run the build script and run the node server.
 * Command ```npm start``` run the sever script.
 * Command ```npm test``` is not working yet.
+* Command ```npm run lint``` run the eslint script.
 
 ## DotEnv
 

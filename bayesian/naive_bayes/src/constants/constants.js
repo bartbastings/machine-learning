@@ -1,8 +1,5 @@
-export const CONSTANT = {
-
-    /**
-     * @property {array} STATE_KEYS
-     */
+exports.CONSTANTS = {
+    LAPLACE_SMOOTHING: 1,
     STATE_KEYS: [
         'categories',
         'docCount',

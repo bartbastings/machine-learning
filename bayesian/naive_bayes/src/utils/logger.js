@@ -1,25 +1,21 @@
-import { createLogger, format, transports } from 'winston';
+const { createLogger, format, transports } = require('winston');
+const { config } = require('./config');
 
-import { config } from './config';
-
-/**
- * @constant {object} winstonLogger Create own logger
- */
 const winstonLogger = createLogger({
-    level: 'info',
     format: format.combine(
         format.timestamp(),
-        format.json()
+        format.json(),
     ),
+    level: 'info',
     transports: [
         new transports.File({
             filename: config.errorLogFile,
-            level: 'error'
+            level: 'error',
         }),
         new transports.File({
             filename: config.logFile,
             maxsize: 4096,
-        })
+        }),
     ],
 });
 
@@ -29,4 +25,4 @@ if (config.nodeEnv !== 'production') {
     }));
 }
 
-export const logger = winstonLogger;
+exports.logger = winstonLogger;

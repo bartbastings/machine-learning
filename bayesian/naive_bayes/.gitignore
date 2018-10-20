@@ -23,10 +23,6 @@ coverage/
 ##########################
 node_modules/
 
-# Compiled directories #
-########################
-dist/
-
 # dotenv environment file #
 ###########################
 .env
