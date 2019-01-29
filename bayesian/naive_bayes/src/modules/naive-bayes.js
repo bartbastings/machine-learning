@@ -10,10 +10,57 @@ const { CONSTANTS } = require('../constants/constants');
  */
 module.exports = class NaiveBayes {
     /**
+     * @static frequencyTable
+     * @description Build a frequency hashmap where:
+     * - the keys are the entries in `tokens`
+     * - the values are the frequency of each entry in `tokens`
+     * @param {array} tokens - Normalized word array
+     * @return {object} frequencyTable
+     */
+    static frequencyTable(tokens) {
+        logger.silly(`static NaiveBayes.frequencyTable :: invoked : tokens = '${JSON.stringify(tokens)}'`);
+        const frequencyTable = Object.create(null);
+        _.forEach(tokens, (token) => {
+            if (!frequencyTable[token]) {
+                frequencyTable[token] = 1;
+            } else {
+                frequencyTable[token] += 1;
+            }
+        });
+        return frequencyTable;
+    }
+
+    /**
+     * @static _iterateKeys
+     * @param {object} objectKeys
+     * @param {function} callBack
+     */
+    static iterateKeys(objectKeys, callBack) {
+        logger.silly(`static NaiveBayes.iterateKeys :: invoked : objectKeys = '${JSON.stringify(objectKeys)}'`);
+        const namesArray = _.keys(objectKeys);
+        _.forEach(namesArray, callBack);
+    }
+
+    /**
+     * @method tokenizer
+     * @description Given an input string, tokenize it into an array of word tokens.
+     * @param {string} text
+     * @returns array of word tokens
+     */
+    static tokenizer(text) {
+        logger.silly(`static NaiveBayes.tokenizer :: invoked : text = '${text}'`);
+        const rgxReplace = /[^(a-zA-Z0-9)+\s]/g;
+        const rgxSplit = /\s+/;
+        const textReplaced = text.replace(rgxReplace, ' ');
+        return textReplaced.toLowerCase().trim().split(rgxSplit);
+    }
+
+    /**
      * @constructor NaiveBayes class
      * @description set all the properties in the class
      */
     constructor() {
+        logger.silly('NaiveBayes.constructor :: invoked');
         /**
          * @property {object} vocabulary Initialize of the vocabulary
          */
@@ -51,19 +98,9 @@ module.exports = class NaiveBayes {
         this.classNames = {};
 
         /**
-         * @property {number} classCount - count for each className
+         * @property {number} classSize - count for each className
          */
-        this.classCount = 0;
-
-        /**
-         * @property {regular expression} rgxReplace - TODO
-         */
-        this.rgxReplace = /[^(a-zA-Z0-9)+\s]/g;
-
-        /**
-         * @property {regular expression} rgxSplit - TODO
-         */
-        this.rgxSplit = /\s+/;
+        this.classSize = 0;
     }
 
     /**
@@ -72,112 +109,68 @@ module.exports = class NaiveBayes {
      * @param {string} className
      */
     initClass(className) {
+        logger.silly(`NaiveBayes.initClass :: invoked : className = '${className}'`);
         if (!this.classNames[className]) {
             this.docCount[className] = 0;
             this.wordCount[className] = 0;
             this.wordFrequencyCount[className] = {};
             this.classNames[className] = true;
-            this.classCount += 1;
-
-            logger.info(`initClass :: className : the new className '${className}' added`);
+            this.classSize += 1;
+            logger.debug(`NaiveBayes.initClass :: classNames : ClassName '${className}' added`);
         } else {
-            logger.info(`initClass :: className : the className '${className}' already exist`);
+            logger.debug(`NaiveBayes.initClass :: classNames : ClassName '${className}' already exist`);
         }
     }
 
     /**
      * @method initVocabulary
-     * @description add this word to our vocabulary if not already existing
+     * @description add this word to our vocabulary if it not exist
      * @param {string} token - token
      */
     initVocabulary(token) {
+        logger.silly(`NaiveBayes.initVocabulary :: invoked : token = '${token}'`);
         if (!this.vocabulary[token]) {
             this.vocabulary[token] = true;
             this.vocabularySize += 1;
-
-            logger.info('TODO');
+            logger.debug(`NaiveBayes.initVocabulary :: vocabulary : Token '${token}' added`);
         } else {
-            logger.info('TODO');
+            logger.debug(`NaiveBayes.initVocabulary :: vocabulary : Token '${token}' already exist`);
         }
     }
 
     /**
      * @method initWordFrequencyCount
-     * @description update the frequency information for this word in this category
-     * @param frequencyInText frequencyInText
-     * @param token token
-     * @param category the category name
+     * @description update the frequency information for this word in this className
+     * @param {number} frequencyInText - number of amount of tokens in text
+     * @param {string} token - the name of the token
+     * @param {string} className - the name of the class
      */
-    itWordFrequencyCount(frequencyInText, token, category) {
-        if (!this.wordFrequencyCount[category][token]) {
-            this.wordFrequencyCount[category][token] = frequencyInText;
-
-            logger.info('TODO');
+    initWordFrequencyCount(frequencyInText, token, className) {
+        logger.silly(`NaiveBayes.initWordFrequencyCount :: invoked : frequencyInText = '${frequencyInText}' : token = '${token}' : className = '${className}'`);
+        if (!this.wordFrequencyCount[className][token]) {
+            this.wordFrequencyCount[className][token] = frequencyInText;
+            logger.debug(`NaiveBayes.initWordFrequencyCount :: wordFrequencyCount : Token '${token}' added in className '${className}'`);
         } else {
-            this.wordFrequencyCount[category][token] += frequencyInText;
-
-            logger.info('TODO');
+            this.wordFrequencyCount[className][token] += frequencyInText;
+            logger.debug(`NaiveBayes.initWordFrequencyCount :: wordFrequencyCount : Token '${token}' already exist in className '${className}'`);
         }
-    }
-
-    /**
-     * @method tokenizer
-     * @description Given an input string, tokenize it into an array of word tokens.
-     * @param {string} text
-     * @returns array of word tokens
-     */
-    tokenizer(text) {
-        const textReplaced = text.replace(this.rgxReplace, ' ');
-        return textReplaced.toLowerCase().trim().split(this.rgxSplit);
     }
 
     /**
      * @method tokenProbability
      * @description Calculate probability that a `token` belongs to a `category`
      * @param {string} token
-     * @param {string} category
+     * @param {string} className
      * @return {number} probability
      */
     tokenProbability(token, className) {
+        logger.silly(`NaiveBayes.tokenProbability :: invoked : token = '${token}' : className = '${className}'`);
         // how many times this word has occurred in documents mapped to this category
         const wordFrequencyCount = this.wordFrequencyCount[className][token] || 0;
-
         // what is the count of all words that have ever been mapped to this category
         const wordCount = this.wordCount[className];
-
         // use laplace Add-1 Smoothing equation
         return (wordFrequencyCount + 1) / (wordCount + this.vocabularySize);
-    }
-
-    /**
-     * @method frequencyTable
-     * @description Build a frequency hashmap where:
-     * - the keys are the entries in `tokens`
-     * - the values are the frequency of each entry in `tokens`
-     * @param {array} tokens - Normalized word array
-     * @return {object} frequencyTable
-     */
-    frequencyTable(tokens) {
-        this.frequencyTable = Object.create(null);
-
-        _.forEach(tokens, (token) => {
-            if (!this.frequencyTable[token]) {
-                this.frequencyTable[token] = 1;
-            } else {
-                this.frequencyTable[token] += 1;
-            }
-        });
-        return this.frequencyTable;
-    }
-
-    /**
-     * @method _iterateKeys
-     * @param {object} objectKeys
-     * @param {function} callBack
-     */
-    iterateKeys(objectKeys, callBack) {
-        this.namesArray = _.keys(objectKeys);
-        _.forEach(this.namesArray, callBack);
     }
 
     /**
@@ -186,11 +179,15 @@ module.exports = class NaiveBayes {
      * by telling it what `classNAME` the `text` corresponds to.
      * @param {string} text - text to train corresponding to the category
      * @param {string} className - className to train corresponding to the text
+     * @throws {error} error - Only string parameter supported!
+     * @returns {object} NaiveBayes
      */
-    lear(text, className) {
+    learn(text, className) {
         if (typeof text !== 'string' && typeof className !== 'string') {
-            logger.error('lear :: error : one of the parameters is not a string');
+            logger.error('NaiveBayes.learn :: error : one of the parameters is not a string');
             throw new Error('Only string parameter supported!');
+        } else {
+            logger.silly(`NaiveBayes.learn :: invoked : text = '${text}' : className = '${className}'`);
         }
         // initialize class data structures if we've never seen this className
         this.initClass(className);
@@ -234,6 +231,8 @@ module.exports = class NaiveBayes {
         if (typeof text !== 'string') {
             logger.error('classify :: error : the parameter \'text\' is not a string');
             throw new Error('Only string parameter supported!');
+        } else {
+            logger.silly(`NaiveBayes.classify : text = '${text}'`);
         }
         // set the max probability negative infinity
         let maxProbability = -Infinity;
@@ -249,8 +248,6 @@ module.exports = class NaiveBayes {
 
         // iterate thru our categories to find the one with max probability for this text
         this.iterateKeys(this.classNames, (className) => {
-            // let maxClassProbability = -Infinity;
-
             // start by calculating the overall probability of this category
             const classProbability = this.docCount[className] / this.totalDocuments;
 
@@ -265,6 +262,8 @@ module.exports = class NaiveBayes {
                 // determine the log of the P(A|B) for this word
                 logProbability += frequencyInText * Math.log(tokenProbability);
             });
+
+            logger.debug(`NaiveBayes.learn :: probability : className = ${className} : logProbability = ${logProbability}`);
 
             if (logProbability > maxProbability) {
                 maxProbability = logProbability;
@@ -282,12 +281,19 @@ module.exports = class NaiveBayes {
      * @returns {object}
      */
     importData(jsonStr) {
+        if (typeof jsonStr !== 'string') {
+            logger.error('NaiveBayes.importData :: error : The parameter \'jsonStr\' is not a string.');
+            throw new Error('Only string parameter supported!');
+        } else {
+            logger.silly(`NaiveBayes.importData :: jsonStr = '${jsonStr}'`);
+        }
         let parsed = {};
 
         try {
             parsed = JSON.parse(jsonStr);
         } catch (error) {
-            logger.error(`importData :: error : not a valid JSON string ${jsonStr}`);
+            logger.error(`importData :: error : Not a valid JSON string ${jsonStr}.`);
+            throw new Error(error);
         }
 
         _.forEach(CONSTANTS.STATE_KEYS, (key) => {
